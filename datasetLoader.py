@@ -19,6 +19,8 @@ class dl:
             csvFile = csv.reader(file)
 
             for lines in csvFile:
+                if lines[0] == "Category":
+                    continue
                 datasetDir[lines[0]] = lines[1]
 
             for group in datasetDir:
