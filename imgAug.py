@@ -37,10 +37,11 @@ for group in datasetImg:
 
         samples = expand_dims(data, 0)
 
-        datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, fill_mode='nearest')
-        it = datagen.flow(samples, batch_size=1)
+        datagen = ImageDataGenerator(brightness_range=[0.5, 1.5], zoom_range=0.2,
+                                     horizontal_flip=True, vertical_flip=True, fill_mode='nearest')
+        it = datagen.flow(samples, batch_size=1, shuffle=True)
 
-        for i in range(4):
+        for i in range(6):
             batch = it.next()
             im = Image.fromarray(batch[0].astype('uint8'))
 
