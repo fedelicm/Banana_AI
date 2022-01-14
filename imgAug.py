@@ -6,24 +6,20 @@ from keras.preprocessing.image import ImageDataGenerator
 import datasetLoader
 from PIL import Image
 import os
-import csv
 
 BASE_DIR = os.path.dirname(__file__)
 
 dl = datasetLoader.dl("dataset.csv")
-OUTPUT_FOLDER = "\\output"
-OUTPUT_DIR = BASE_DIR + OUTPUT_FOLDER
+OUTPUT_FOLDER = "output-gray-all-5"
+OUTPUT_DIR = BASE_DIR + "\\" + OUTPUT_FOLDER
 datasetImg = dl.getDatasetImg_dic()
 datasetDir = dl.getDatasetDir_dic()
+grayscale = True
 
 try:
     os.mkdir(OUTPUT_DIR)
 except FileExistsError:
     pass
-
-with open('aug_dataset.csv', 'w', newline='') as csvfile:
-    aug_csv_writer = csv.writer(csvfile, delimiter=',',)
-    aug_csv_writer.writerow(["Category","Directory"])
 
 for group in datasetImg:
     imgcount = 1
@@ -34,10 +30,6 @@ for group in datasetImg:
     except FileExistsError:
         pass
 
-    with open('aug_dataset.csv', 'a', newline='') as csvfile:
-        aug_csv_writer = csv.writer(csvfile, delimiter=',',)
-        aug_csv_writer.writerow([group, OUTPUT_FOLDER + "\\" + group])
-
     for imgDir in datasetImg[group]:
         img = load_img(imgDir)
 
@@ -45,15 +37,15 @@ for group in datasetImg:
 
         samples = expand_dims(data, 0)
 
-        datagen = ImageDataGenerator(featurewise_center=True, brightness_range=[0.5, 1.5],
-                                     zoom_range=0.2, channel_shift_range=0.2,
-                                     horizontal_flip=True, vertical_flip=True, fill_mode='nearest')
+        datagen = ImageDataGenerator(horizontal_flip=True, vertical_flip=True, fill_mode='nearest')
         it = datagen.flow(samples, batch_size=1)
 
-        for i in range(6):
+        for i in range(4):
             batch = it.next()
-            image = batch[0].astype('uint8')
             im = Image.fromarray(batch[0].astype('uint8'))
+
+            if(grayscale):
+                im = im.convert('L')
 
             zeroes = ""
             for c in range(3-len(imgcount.__str__())):
