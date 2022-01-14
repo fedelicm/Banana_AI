@@ -54,7 +54,6 @@ VGGHead = VGGBody.output
 VGGHead = AveragePooling2D(pool_size=pooling_size)(VGGHead)
 VGGHead = Flatten(name="flatten")(VGGHead)
 VGGHead = Dense(128, activation="relu")(VGGHead)
-VGGHead = Dense(32, activation="relu")(VGGHead)
 VGGHead = Dropout(0.5)(VGGHead)
 VGGHead = Dense(groups, activation="softmax")(VGGHead)
 3
@@ -68,7 +67,6 @@ ResNetHead = ResNetBody.output
 ResNetHead = AveragePooling2D(pool_size=pooling_size)(ResNetHead)
 ResNetHead = Flatten(name="flatten")(ResNetHead)
 ResNetHead = Dense(128, activation="relu")(ResNetHead)
-ResNetHead = Dense(32, activation="relu")(ResNetHead)
 ResNetHead = Dropout(0.5)(ResNetHead)
 ResNetHead = Dense(groups, activation="softmax")(ResNetHead)
 
@@ -82,7 +80,6 @@ InceptionHead = InceptionBody.output
 InceptionHead = AveragePooling2D(pool_size=pooling_size)(InceptionHead)
 InceptionHead = Flatten(name="flatten")(InceptionHead)
 InceptionHead = Dense(128, activation="relu")(InceptionHead)
-InceptionHead = Dense(32, activation="relu")(InceptionHead)
 InceptionHead = Dropout(0.5)(InceptionHead)
 InceptionHead = Dense(groups, activation="softmax")(InceptionHead)
 
