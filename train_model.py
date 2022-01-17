@@ -1,4 +1,3 @@
-import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras.applications import VGG16
@@ -12,13 +11,11 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 import os
 import splitfolders
+from plotter import plot
 
 BASE_DIR = os.path.dirname(__file__)
 DATASET_FOLDER = "output-gray-all-5"
 DATASET_FOLDER_SPLIT = DATASET_FOLDER + "-split"
-splitfolders.ratio(DATASET_FOLDER, output=DATASET_FOLDER_SPLIT, seed=123406789, ratio=(.7, .3), group_prefix=None)
-
-
 DATASET_DIR = BASE_DIR + "\\" + DATASET_FOLDER_SPLIT
 MODELS_DIR = BASE_DIR + "\\models" + " (" + DATASET_FOLDER + ")"
 
@@ -28,6 +25,7 @@ Epochs = 8
 Batch_Size = 16
 pooling_size =(9, 3)
 
+splitfolders.ratio(DATASET_FOLDER, output=DATASET_FOLDER_SPLIT, seed=123406789, ratio=(.7, .2, .1), group_prefix=None)
 
 train_dataset = ImageDataGenerator(rescale=1./255).flow_from_directory(
 													batch_size=Batch_Size,
@@ -46,6 +44,16 @@ validation_dataset = ImageDataGenerator(rescale=1./255).flow_from_directory(
 														class_mode='categorical',
 														color_mode='rgb',
 														interpolation='lanczos')
+
+test_dataset = ImageDataGenerator(rescale=1./255).flow_from_directory(
+														batch_size=Batch_Size,
+														directory=DATASET_DIR+"\\test",
+														shuffle=True,
+														target_size=(size, size),
+														class_mode='categorical',
+														color_mode='rgb',
+														interpolation='lanczos')
+
 groups = train_dataset.num_classes
 
 VGGBody = VGG16(weights="imagenet", include_top=False, input_tensor=Input(shape=(size, size, 3)))
@@ -56,7 +64,6 @@ VGGHead = Flatten(name="flatten")(VGGHead)
 VGGHead = Dense(128, activation="relu")(VGGHead)
 VGGHead = Dropout(0.5)(VGGHead)
 VGGHead = Dense(groups, activation="softmax")(VGGHead)
-3
 VGGModel = Model(inputs=VGGBody.input, outputs=VGGHead)
 
 for layer in VGGBody.layers: layer.trainable = False
@@ -95,35 +102,41 @@ except FileExistsError:
     pass
 
 ResNet.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
-X = ResNet.fit(train_dataset,
-			   steps_per_epoch=len(train_dataset.filenames) / Batch_Size,
-			   epochs=Epochs)
-
+R = ResNet.fit(train_dataset,
+				steps_per_epoch=len(train_dataset.filenames) / Batch_Size,
+				validation_data=validation_dataset,
+				validation_steps=len(validation_dataset.filenames) / Batch_Size,
+				epochs=Epochs)
+plot(R,"ResNet152V2",MODELS_DIR)
 ResNet.save(MODELS_DIR + '\\ResNet_model.h5')
 
 VGGModel.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
-N = VGGModel.fit(train_dataset,
+V = VGGModel.fit(train_dataset,
 				steps_per_epoch=len(train_dataset.filenames) / Batch_Size,
+				validation_data=validation_dataset,
+				validation_steps=len(validation_dataset.filenames) / Batch_Size,
 				epochs=Epochs)
-
+plot(V,"VGG16",MODELS_DIR)
 VGGModel.save(MODELS_DIR+'\\VGG_model.h5')
 
 InceptionModel.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
 I = InceptionModel.fit(train_dataset,
-	steps_per_epoch=len(train_dataset.filenames) / Batch_Size,
-	epochs=Epochs)
-
+						steps_per_epoch=len(train_dataset.filenames) / Batch_Size,
+						validation_data=validation_dataset,
+						validation_steps=len(validation_dataset.filenames) / Batch_Size,
+						epochs=Epochs)
+plot(I,"InceptionV3",MODELS_DIR)
 InceptionModel.save(MODELS_DIR+'\\InceptionV3_model.h5')
 
 result_txt = open(MODELS_DIR + "\\Results.txt", 'w')
 print("ResNet Results")
-result_txt.write("ResNet Results: " + ResNet.evaluate(validation_dataset).__str__() + "\n")
+result_txt.write("ResNet Results: " + ResNet.evaluate(test_dataset).__str__() + "\n")
 print("")
 
 print("VGG16 Results")
-result_txt.write("VGG16 Results: " + VGGModel.evaluate(validation_dataset).__str__()+"\n")
+result_txt.write("VGG16 Results: " + VGGModel.evaluate(test_dataset).__str__()+"\n")
 print("")
 
 print("Inception_V3 Results")
-result_txt.write("Inception_V3 Results: " + InceptionModel.evaluate(validation_dataset).__str__()+"\n")
+result_txt.write("Inception_V3 Results: " + InceptionModel.evaluate(test_dataset).__str__()+"\n")
 result_txt.close()
