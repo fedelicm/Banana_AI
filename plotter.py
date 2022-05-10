@@ -7,7 +7,7 @@ def plot(H, str_label, save_directory):
 	val_accuracy = H.history['val_accuracy']
 	epochs = range(1, len(loss_values)+1)
 	fig_H = plt.figure()
-	plt.yticks(range(0, 2, 0.2))
+	plt.yticks([x / 10.0 for x in range(0, 21, 1)])
 	plt.plot(epochs, loss_values, label='Training Loss', figure=fig_H)
 	plt.plot(epochs, accuracy, label='Training Accuracy', figure=fig_H)
 	plt.plot(epochs, val_loss_values, label='Validation Loss', figure=fig_H)
