@@ -1,3 +1,4 @@
+import numpy
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras.applications import VGG16
@@ -9,6 +10,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Input
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
+from sklearn.metrics import confusion_matrix
 import os
 import splitfolders
 from plotter import plot
@@ -23,7 +25,7 @@ size = 454
 Learning_Rate = 1e-3
 Epochs = 8
 Batch_Size = 16
-pooling_size =(9, 3)
+pooling_size =(3, 3)
 
 splitfolders.ratio(DATASET_FOLDER, output=DATASET_FOLDER_SPLIT, seed=123406789, ratio=(.7, .2, .1), group_prefix=None)
 
@@ -61,7 +63,7 @@ VGGBody = VGG16(weights="imagenet", include_top=False, input_tensor=Input(shape=
 VGGHead = VGGBody.output
 VGGHead = AveragePooling2D(pool_size=pooling_size)(VGGHead)
 VGGHead = Flatten(name="flatten")(VGGHead)
-VGGHead = Dense(128, activation="relu")(VGGHead)
+VGGHead = Dense(32, activation="relu")(VGGHead)
 VGGHead = Dropout(0.5)(VGGHead)
 VGGHead = Dense(groups, activation="softmax")(VGGHead)
 VGGModel = Model(inputs=VGGBody.input, outputs=VGGHead)
@@ -108,6 +110,7 @@ R = ResNet.fit(train_dataset,
 				validation_steps=len(validation_dataset.filenames) / Batch_Size,
 				epochs=Epochs)
 plot(R,"ResNet152V2",MODELS_DIR)
+
 ResNet.save(MODELS_DIR + '\\ResNet_model.h5')
 
 VGGModel.compile(loss="categorical_crossentropy", optimizer=opt, metrics=["accuracy"])
